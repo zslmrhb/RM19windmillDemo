@@ -321,18 +321,18 @@ int main(int argc, char *argv[])
                     dstRect[1]=Point2f(width,0);
                     dstRect[2]=Point2f(width,height);
                     dstRect[3]=Point2f(0,height); 
-                    // 应用透视变换，矫正成规则矩形    
+                    // 应用透视变换，矫正成规则矩形    implemented perspective transformation, correct to a regular rectangle.
                     Mat transform = getPerspectiveTransform(srcRect,dstRect);
                     Mat perspectMat;
                     warpPerspective(midImage2,perspectMat,transform,midImage2.size());
 #ifdef DEBUG
                     imshow("warpdst",perspectMat);
 #endif
-                    // 提取扇叶图片
+                    // 提取扇叶图片        extracts images of the fan blade.
                     Mat testim;
                     testim = perspectMat(Rect(0,0,width,height));
 #ifdef LEAF_IMG
-                    //用于保存扇叶图片，以便接下来训练svm
+                    //用于保存扇叶图片，以便接下来训练svm      saving training images for the SVM.
                     string s="leaf"+to_string(cnnt)+".jpg";
                     cnnt++;
                     imwrite("./img/"+s,testim);
@@ -390,10 +390,10 @@ int main(int argc, char *argv[])
                     cout<<Vvalue2[maxv2]<<endl;
 #endif
 #ifdef USE_SVM
-                    //转化为svm所要求的格式
+                    //转化为svm所要求的格式       format needed to convert to SVM (support vector machine)
                     Mat test=get(testim);
 #endif
-                    //预测是否是要打击的扇叶
+                    //预测是否是要打击的扇叶    predict if the current fan blade is the target.
 #ifdef USE_TEMPLATE
                     if(Vvalue1[maxv1]>Vvalue2[maxv2]&&Vvalue1[maxv1]>0.6)
 #endif
@@ -402,7 +402,7 @@ int main(int argc, char *argv[])
 #endif
                     {
                         findTarget=true;
-                        //查找装甲板
+                        //查找装甲板    find the armor module.
                         if(hierarchy2[i][2]>=0)
                         {
                             RotatedRect rect_tmp=minAreaRect(contours2[hierarchy2[i][2]]);
@@ -435,11 +435,11 @@ int main(int argc, char *argv[])
                                  continue;
                             }
                             Point centerP=rect_tmp.center;
-                            //打击点
+                            //打击点  hitting points
                             circle(srcImage,centerP,1,Scalar(0,255,0),2);
 #ifdef SHOW_CIRCLE
                             circle(drawcircle,centerP,1,Scalar(0,0,255),1);
-                            //用于拟合圆，用30个点拟合圆
+                            //用于拟合圆，用30个点拟合圆      fitting the circle by using 30 points
                             if(cirV.size()<30)
                             {
                                 cirV.push_back(centerP);
@@ -447,7 +447,7 @@ int main(int argc, char *argv[])
                             else
                             {
                                 float R;
-                                //得到拟合的圆心
+                                //得到拟合的圆心   the fitted circle
                                 CircleInfo2(cirV,cc,R);
                                 circle(drawcircle,cc,1,Scalar(255,0,0),2);
 #endif
@@ -493,7 +493,7 @@ int main(int argc, char *argv[])
         imshow("Result",srcImage);
         if('q'==waitKey(1))break;
 #endif
-        //函数所花的时间
+        //函数所花的时间      running time for the program.
         auto t2 = chrono::high_resolution_clock::now();
         cout << "Total period: " << (static_cast<chrono::duration<double, std::milli>>(t2 - t1)).count() << " ms" << endl;
 //        t1 = chrono::high_resolution_clock::now();

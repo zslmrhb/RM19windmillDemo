@@ -36,7 +36,7 @@ double getDistance(Point A,Point B)
     dis=pow((A.x-B.x),2)+pow((A.y-B.y),2);
     return sqrt(dis);
 }
-//标准化并计算hog
+//标准化并计算hog          --> performed normalization and calculate HOG (histograms of oriented gradients)   
 vector<float> stander(Mat im)
 {
 
@@ -49,11 +49,11 @@ vector<float> stander(Mat im)
     vector<float> result;
 
     HOGDescriptor hog(cvSize(48,48),cvSize(16,16),cvSize(8,8),cvSize(8,8),9,1,-1,
-                      HOGDescriptor::L2Hys,0.2,false,HOGDescriptor::DEFAULT_NLEVELS);           //初始化HOG描述符
+                      HOGDescriptor::L2Hys,0.2,false,HOGDescriptor::DEFAULT_NLEVELS);       //初始化HOG描述符 --> initialized HOG (histograms of oriented gradients) descriptor
     hog.compute(im,result);
     return result;
 }
-//将图片转换为svm所需格式
+//将图片转换为svm所需格式       Convert the image into SVM (support vector machine) required format. 
 Mat get(Mat input)
 {
     vector<float> vec=stander(input);
@@ -71,11 +71,11 @@ Mat get(Mat input)
 
 
 /*
- * 参考: http://blog.csdn.net/liyuanbhu/article/details/50889951
- * 通过最小二乘法来拟合圆的信息
- * pts: 所有点坐标
- * center: 得到的圆心坐标
- * radius: 圆的半径
+ * 参考: http://blog.csdn.net/liyuanbhu/article/details/50889951           
+ * 通过最小二乘法来拟合圆的信息          Info. for least-squares fitting of circle
+ * pts: 所有点坐标                      all coordinate of the points
+ * center: 得到的圆心坐标                center of the circle
+ * radius: 圆的半径                     radius
  */
 static bool CircleInfo2(std::vector<cv::Point2f>& pts, cv::Point2f& center, float& radius)
 {
@@ -135,7 +135,7 @@ static bool CircleInfo2(std::vector<cv::Point2f>& pts, cv::Point2f& center, floa
     return true;
 }
 
-//模板匹配
+//模板匹配    template matching
 double TemplateMatch(cv::Mat image, cv::Mat tepl, cv::Point &point, int method)
 {
     int result_cols =  image.cols - tepl.cols + 1;
@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
     cap.open("../RM19windmillDemo/red.avi");
 #endif
 #ifdef LEAF_IMG
-    //用于记录扇叶编号，方便保存图片
+    //用于记录扇叶编号，方便保存图片        labeling the fan blade of the power rune, easier for saving the images         
     int cnnt=0;
 #endif
 #ifdef USE_SVM
@@ -199,14 +199,14 @@ int main(int argc, char *argv[])
     bool isRecording = false;
     time_t t;
     time(&t);
-    const string fileName = "/home/happy/视频/" + to_string(t) + ".avi";
+    const string fileName = "/home/happy/视频/" + to_string(t) + ".avi";          //视频： video
     writer.open(fileName, CV_FOURCC('M', 'J', 'P', 'G'), 30, Size(1280, 720));
     //    writer.open(fileName, CV_FOURCC('M', 'J', 'P', 'G'), 30, Size(640, 480));
 #endif
 
     Mat srcImage;
     cap >> srcImage;
-    // 画拟合圆
+    // 画拟合圆        draw the fitting circle
     Mat drawcircle=Mat(srcImage.rows,srcImage.cols, CV_8UC3, Scalar(0, 0, 0));
 #ifdef USE_TEMPLATE
     Mat templ[9];
@@ -219,7 +219,7 @@ int main(int argc, char *argv[])
 
     Point2f cc=Point2f(0,0);
 
-    //程序主循环
+    //程序主循环        main loop for the program
 
     while(true)
     {
@@ -239,34 +239,34 @@ int main(int argc, char *argv[])
             cout << "Start capture. " + fileName +" created." << endl;
         isRecording = true;
 #endif
-        //分割颜色通道
+        //分割颜色通道           color channels segmentation
         vector<Mat> imgChannels;
         split(srcImage,imgChannels);
-        //获得目标颜色图像的二值图
+        //获得目标颜色图像的二值图       get the binary image of the target threshold (color)
 #ifdef RED
         Mat midImage2=imgChannels.at(2)-imgChannels.at(0);
 #endif
 #ifndef RED
         Mat midImage2=imgChannels.at(0)-imgChannels.at(2);
 #endif
-        //二值化，背景为黑色，图案为白色
-        //用于查找扇叶
+        //二值化，背景为黑色，图案为白色              image binarization, backround: black , foreground: white
+        //用于查找扇叶                               purpose: finding each fan blades of the power rune.
         threshold(midImage2,midImage2,100,255,CV_THRESH_BINARY);
 #ifdef DEBUG
         imshow("midImage2",midImage2);
 #endif  
         int structElementSize=2;
         Mat element=getStructuringElement(MORPH_RECT,Size(2*structElementSize+1,2*structElementSize+1),Point(structElementSize,structElementSize));
-        //膨胀
+        //膨胀         dilation
         dilate(midImage2,midImage2,element);
-        //开运算，消除扇叶上可能存在的小洞
+        //开运算，消除扇叶上可能存在的小洞      opening operation(dialtion --> erosion): elimate the possible small holes on the fan blades.
         structElementSize=3;
         element=getStructuringElement(MORPH_RECT,Size(2*structElementSize+1,2*structElementSize+1),Point(structElementSize,structElementSize));
         morphologyEx(midImage2,midImage2, MORPH_CLOSE, element);
 #ifdef DEBUG
         imshow("dilate",midImage2);
 #endif
-        //查找轮廓
+        //查找轮廓     find contour
         vector<vector<Point>> contours2;
         vector<Vec4i> hierarchy2;
         findContours(midImage2,contours2,hierarchy2,CV_RETR_TREE,CHAIN_APPROX_SIMPLE);
@@ -274,7 +274,7 @@ int main(int argc, char *argv[])
         RotatedRect rect_tmp2;
         bool findTarget=0;
 
-        //遍历轮廓
+        //遍历轮廓       iterates over the contour
         if(hierarchy2.size())
             for(int i=0;i>=0;i=hierarchy2[i][0])
             {
@@ -288,7 +288,7 @@ int main(int argc, char *argv[])
                 double width;
                 double height;
 
-                //矫正提取的叶片的宽高
+                //矫正提取的叶片的宽高            correction for the height and width of the extracted fan blades from the operations above.
                 width=getDistance(P[0],P[1]);
                 height=getDistance(P[1],P[2]);
                 if(width>height)
@@ -310,7 +310,7 @@ int main(int argc, char *argv[])
                 Scalar color(rand() & 255, rand() & 255, rand() & 255);
                 drawContours(srcImage, contours2, i, color, 4, 8, hierarchy2);
 #endif
-                //通过面积筛选
+                //通过面积筛选           selects through the area
                 double area=height*width;
                 if(area>5000){
 #ifdef DEBUG_LOG
@@ -320,8 +320,8 @@ int main(int argc, char *argv[])
                     dstRect[0]=Point2f(0,0);
                     dstRect[1]=Point2f(width,0);
                     dstRect[2]=Point2f(width,height);
-                    dstRect[3]=Point2f(0,height);
-                    // 应用透视变换，矫正成规则矩形
+                    dstRect[3]=Point2f(0,height); 
+                    // 应用透视变换，矫正成规则矩形    
                     Mat transform = getPerspectiveTransform(srcRect,dstRect);
                     Mat perspectMat;
                     warpPerspective(midImage2,perspectMat,transform,midImage2.size());

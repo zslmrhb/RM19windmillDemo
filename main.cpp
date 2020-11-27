@@ -29,7 +29,7 @@ SOFTWARE.
 using namespace cv;
 using namespace cv::ml;
 using namespace std;
-//获取点间距离
+//获取点间距离  find distance between points.
 double getDistance(Point A,Point B)
 {
     double dis;
@@ -71,7 +71,7 @@ Mat get(Mat input)
 
 
 /*
- * 参考: http://blog.csdn.net/liyuanbhu/article/details/50889951           
+ * 参考: http://blog.csdn.net/liyuanbhu/article/details/50889951   reference        
  * 通过最小二乘法来拟合圆的信息          Info. for least-squares fitting of circle
  * pts: 所有点坐标                      all coordinate of the points
  * center: 得到的圆心坐标                center of the circle
@@ -310,7 +310,7 @@ int main(int argc, char *argv[])
                 Scalar color(rand() & 255, rand() & 255, rand() & 255);
                 drawContours(srcImage, contours2, i, color, 4, 8, hierarchy2);
 #endif
-                //通过面积筛选           selects through the area
+                //通过面积筛选           selects (contour? probably) through the area
                 double area=height*width;
                 if(area>5000){
 #ifdef DEBUG_LOG
